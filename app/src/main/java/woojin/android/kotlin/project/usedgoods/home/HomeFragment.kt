@@ -67,16 +67,16 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         fragmentHomeBinding.articleRecyclerView.adapter = articleAdapter
         fragmentHomeBinding.addFloatingButton.setOnClickListener {
             //회원만 이동할 수 있도록
-            if (auth.currentUser != null) {
+//            if (auth.currentUser != null) {
                 startActivity(Intent(requireActivity(), AddArticleActivity::class.java))
-            } else {
-                Snackbar.make(
-                    view,
-                    "로그인 후 사용해주세요.",
-                    Snackbar.LENGTH_SHORT
-                )
-                    .show()
-            }
+//            } else {
+//                Snackbar.make(
+//                    view,
+//                    "로그인 후 사용해주세요.",
+//                    Snackbar.LENGTH_SHORT
+//                )
+//                    .show()
+//            }
         }
     }
 

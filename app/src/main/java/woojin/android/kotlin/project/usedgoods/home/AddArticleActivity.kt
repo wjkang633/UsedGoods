@@ -8,15 +8,36 @@ import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Button
+import android.widget.EditText
 import android.widget.ImageView
 import android.widget.Toast
 import androidx.core.content.ContextCompat
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.ktx.database
+import com.google.firebase.ktx.Firebase
+import com.google.firebase.storage.FirebaseStorage
+import com.google.firebase.storage.ktx.storage
+import woojin.android.kotlin.project.usedgoods.DBKey.Companion.DB_ARTICLES
 import woojin.android.kotlin.project.usedgoods.R
 import woojin.android.kotlin.project.usedgoods.databinding.ActivityAddArticleBinding
 
 class AddArticleActivity : AppCompatActivity() {
 
     private var selectedUri: Uri? = null
+
+    private val auth: FirebaseAuth by lazy {
+        Firebase.auth
+    }
+
+    private val storage: FirebaseStorage by lazy {
+        Firebase.storage
+    }
+
+    private val articleDB: DatabaseReference by lazy {
+        Firebase.database.reference.child(DB_ARTICLES)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,6 +65,17 @@ class AddArticleActivity : AppCompatActivity() {
                     )
                 }
             }
+        }
+
+        findViewById<Button>(R.id.submitButton).setOnClickListener {
+            val title = findViewById<EditText>(R.id.titleEditText).text.toString()
+            val price = findViewById<EditText>(R.id.priceEditText).text.toString()
+            val sellerId = auth.currentUser?.uid.orEmpty()
+
+            val model = ArticleModel(sellerId, title, System.currentTimeMillis(), price, "")
+            articleDB.push().setValue(model)
+
+            finish()
         }
     }
 
