@@ -7,11 +7,9 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.widget.Button
-import android.widget.EditText
-import android.widget.ImageView
-import android.widget.Toast
+import android.widget.*
 import androidx.core.content.ContextCompat
+import androidx.core.view.isVisible
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.database.DatabaseReference
@@ -72,11 +70,59 @@ class AddArticleActivity : AppCompatActivity() {
             val price = findViewById<EditText>(R.id.priceEditText).text.toString()
             val sellerId = auth.currentUser?.uid.orEmpty()
 
-            val model = ArticleModel(sellerId, title, System.currentTimeMillis(), price, "")
-            articleDB.push().setValue(model)
+            showProgressBar()
 
-            finish()
+            //이미지가 있으면 storage에 업로드 하는 과정 추가
+            if (selectedUri != null) {
+                uploadPhoto(selectedUri!!,
+                    successHandler = { url ->
+                        uploadArticle(sellerId, title, price, url) },
+                    errorHandler = {
+                        Toast.makeText(
+                            this,
+                            "사진 업로드에 실패했습니다.",
+                            Toast.LENGTH_SHORT
+                        ).show()
+
+                        hideProgressBar()
+                    })
+            } else {
+                uploadArticle(sellerId, title, price, "")
+            }
         }
+    }
+
+    private fun uploadPhoto(uri: Uri, successHandler: (String) -> Unit, errorHandler: () -> Unit) {
+        val fileName = "${System.currentTimeMillis()}.png"
+        storage.reference
+            .child("article/photo")
+            .child(fileName)
+            .putFile(uri)
+            .addOnCompleteListener {
+                if (it.isSuccessful) {
+                    storage.reference
+                        .child("article/photo")
+                        .child(fileName)
+                        .downloadUrl
+                        .addOnCompleteListener { uri ->
+                            successHandler(uri.toString())
+                        }
+                        .addOnFailureListener {
+                            errorHandler()
+                        }
+                } else {
+                    errorHandler()
+                }
+            }
+    }
+
+    private fun uploadArticle(sellerId: String, title: String, price: String, imageUrl: String) {
+        val model = ArticleModel(sellerId, title, System.currentTimeMillis(), "$price 원", imageUrl)
+        articleDB.push().setValue(model)
+
+        hideProgressBar()
+
+        finish()
     }
 
     private fun startContentProvider() {
@@ -144,5 +190,13 @@ class AddArticleActivity : AppCompatActivity() {
                 ).show()
             }
         }
+    }
+
+    private fun showProgressBar(){
+        findViewById<ProgressBar>(R.id.progressBar).isVisible = true
+    }
+
+    private fun hideProgressBar(){
+        findViewById<ProgressBar>(R.id.progressBar).isVisible = false
     }
 }
