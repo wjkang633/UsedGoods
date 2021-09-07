@@ -1,9 +1,11 @@
 package woojin.android.kotlin.project.usedgoods.home
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.database.ChildEventListener
@@ -21,18 +23,18 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
     private var binding: FragmentHomeBinding? = null
 
     private lateinit var articleAdapter: ArticleAdapter
-    private lateinit var articleDB :DatabaseReference
+    private lateinit var articleDB: DatabaseReference
 
-    private val auth :FirebaseAuth by lazy {
+    private val auth: FirebaseAuth by lazy {
         Firebase.auth
     }
 
     private val articleList = mutableListOf<ArticleModel>()
 
-    private val listener = object:ChildEventListener{
+    private val listener = object : ChildEventListener {
         override fun onChildAdded(snapshot: DataSnapshot, previousChildName: String?) {
             val articleModel = snapshot.getValue(ArticleModel::class.java)
-            articleModel?:return
+            articleModel ?: return
 
             articleList.add(articleModel)
             articleAdapter.submitList(articleList)
@@ -56,12 +58,26 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         articleDB = Firebase.database.reference.child(DB_ARTICLES)
         articleDB.addChildEventListener(listener)
 
+        //리스트 초기화
+        articleList.clear()
+
         articleAdapter = ArticleAdapter()
 
         fragmentHomeBinding.articleRecyclerView.layoutManager = LinearLayoutManager(context)
         fragmentHomeBinding.articleRecyclerView.adapter = articleAdapter
-
-        articleList.clear()
+        fragmentHomeBinding.addFloatingButton.setOnClickListener {
+            //회원만 이동할 수 있도록
+            if (auth.currentUser != null) {
+                startActivity(Intent(requireActivity(), AddArticleActivity::class.java))
+            } else {
+                Snackbar.make(
+                    view,
+                    "로그인 후 사용해주세요.",
+                    Snackbar.LENGTH_SHORT
+                )
+                    .show()
+            }
+        }
     }
 
     override fun onResume() {
