@@ -1,5 +1,6 @@
 package woojin.android.kotlin.project.usedgoods.chatlist
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import androidx.fragment.app.Fragment
@@ -14,6 +15,7 @@ import com.google.firebase.ktx.Firebase
 import woojin.android.kotlin.project.usedgoods.DBKey.Companion.CHILD_CHAT
 import woojin.android.kotlin.project.usedgoods.DBKey.Companion.DB_USERS
 import woojin.android.kotlin.project.usedgoods.R
+import woojin.android.kotlin.project.usedgoods.chatdetail.ChatRoomActivity
 import woojin.android.kotlin.project.usedgoods.databinding.FragmentChatListBinding
 
 class ChatListFragment : Fragment(R.layout.fragment_chat_list) {
@@ -35,9 +37,11 @@ class ChatListFragment : Fragment(R.layout.fragment_chat_list) {
 
         chatRoomList.clear()
 
-        chatListAdapter = ChatListAdapter(onItemClicked = {
+        chatListAdapter = ChatListAdapter(onItemClicked = { chatRoom ->
             //채팅방으로 이동
-
+            val intent = Intent(requireActivity(), ChatRoomActivity::class.java)
+            intent.putExtra("chatKey", chatRoom.key)
+            startActivity(intent)
         })
 
         fragmentChatListBinding.chatListRecyclerView.adapter = chatListAdapter
@@ -50,9 +54,9 @@ class ChatListFragment : Fragment(R.layout.fragment_chat_list) {
 
         //userDB에서 채팅방 가져오기
         val chatDB = Firebase.database.reference
-                .child(DB_USERS)
-                .child(auth.currentUser!!.uid)
-                .child(CHILD_CHAT)
+            .child(DB_USERS)
+            .child(auth.currentUser!!.uid)
+            .child(CHILD_CHAT)
 
         chatDB.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
